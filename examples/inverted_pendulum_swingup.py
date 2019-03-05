@@ -13,7 +13,7 @@ def rollout(policy, timesteps):
     env.reset()
     x, _, _, _ = env.step([0.])
     for timestep in range(timesteps):
-        env.render()
+        # env.render()
         u = policy(x)
         x_new, _, done, _ = env.step(u)
         if done: break
@@ -30,7 +30,6 @@ def pilco_policy(x):
 
 with tf.Session(graph=tf.Graph()) as sess:
     env = gym.make('InvertedPendulumSwingupBulletEnv-v0')
-    _ = env.render(mode='human')
     # Initial random rollouts to generate a dataset
     X,Y = rollout(policy=random_policy, timesteps=100)
     for i in range(1,3):
