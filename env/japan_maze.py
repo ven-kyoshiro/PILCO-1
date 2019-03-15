@@ -100,6 +100,44 @@ class JapanMaze(object):
         ax[0].scatter(self.goal[0],max(rews),marker='x',c='black')
 
 
+    def vis_kernel(self,other=np.array([-0.9,-0.9])):
+        from mpl_toolkits.mplot3d import Axes3D
+        import matplotlib.pyplot as plt
+        import mpl_toolkits.mplot3d.art3d as art3d
+        from mpl_toolkits.mplot3d import Axes3D
+        import matplotlib.pyplot as plt
+        import mpl_toolkits.mplot3d.art3d as art3d
+        import numpy as np
+        import gpflow
+        def func1(x, y,k,other):
+            ar = []
+            for xx, yy in zip(x,y):
+                arr = []
+                for xxx, yyy in zip(xx,yy):
+                    arr.append(k.compute_K(np.array([[xxx,yyy]]), 
+                               np.zeros((1,2)) + other.reshape(1,2))[0][0])
+                ar.append(arr)
+            return np.array(ar)
+                               
+        k = gpflow.kernels.RBF(input_dim=2, variance=1., ARD=True)
+        x = np.arange(-1.0, 1.0, 0.1)
+        y = np.arange(-1.0, 1.0, 0.1)
+        X, Y = np.meshgrid(x, y)
+        Z = func1(X, Y,k,other)
+        fig = plt.figure()
+        ax = Axes3D(fig)
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("k(x, x*)")
+        ax.plot_surface(X, Y, Z)
+        ax.scatter([other[0]],[other[1]],[0.],marker = 'o',color='green',s=100)
+        ax.plot([-1.,-1.,1.,1.,-1.],[-1.,1.,1.,-1.,-1.],[0.,0.,0.,0.,0.],c='black')
+        c = patches.Circle(xy=(self.center[0], self.center[1]), radius=self.radius, fc='r', ec='r')
+        ax.add_patch(c)
+        ax.view_init(30, 40)
+        art3d.pathpatch_2d_to_3d(c, z=0, zdir="z")
+        ax.invert_xaxis()
+        plt.show()
 
     def vis_trace(self,X,Y):
         fig = plt.figure(figsize=(5,5))
