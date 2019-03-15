@@ -3,7 +3,6 @@ import copy
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-
 class JapanMaze(object):
     def __init__(self,radius=0.5,seed=0):
         np.random.seed(seed=seed)
@@ -88,13 +87,13 @@ class JapanMaze(object):
         c = patches.Circle(xy=(self.center[0], self.center[1]), radius=self.radius, fc='r', ec='r')
         ax[1].add_patch(c)
         ax[1].plot([-1,-1,1,1,-1],[-1,1,1,-1,-1],c='black')
-        ax[1].plot([-1,1],[-1,1], ':',c='black',lw=1,alpha=0.7)
+        ax[1].plot([-1,1],[-1,1], ':',c='black', alpha=0.7)
         im = ax[1].scatter(x[:,0],x[:,1],c=rew)
         ax[1].scatter(self.goal[0],self.goal[1],marker='x',c='black')
         fig.colorbar(im)
         # Cross section
         rews = [self.reward_f([i/100-1,i/100-1]) for i in range(200)]
-        ax[0].plot([j/100-1 for j in range(200)],rews)
+        ax[0].plot([j/100-1 for j in range(200)],rews, ':', c='black')
         ax[0].set_xlabel('x=y=')
         ax[0].set_ylabel('reward')
         # ax[0].vlines([self.goal[0]], min(rews), max(rews), "black", linestyles='dashed')
