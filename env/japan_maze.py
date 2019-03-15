@@ -11,8 +11,9 @@ class JapanMaze(object):
         self.ini_posi = np.array([-0.9,-0.9])
         self.whereami = copy.deepcopy(self.ini_posi)
         self.goal = np.array([0.9,0.9])
+        self.reward_f = lambda y:np.exp(-(np.linalg.norm(y-self.goal)**2)/2) 
         self.center = np.array([0.0,0.0])
-        self.radius = radius
+        self.radius = radius 
         self.timelimit =40
         self.N = 30 # Collision determination　resolution
         high = np.ones(2)*1
@@ -50,8 +51,7 @@ class JapanMaze(object):
             self.whereami = self.step_near_circle(ac)
         else:
             self.whereami = nwai
-        norm = np.linalg.norm(self.whereami-self.goal)
-        rew = np.exp(-(norm**2)*1)
+        rew = self.reward_f(self.whereami)
         return self.whereami, rew, self.timestep>=self.timelimit,{}
 
     def render(self):
@@ -62,6 +62,45 @@ class JapanMaze(object):
         ax.add_patch(c)
         ax.scatter(self.whereami[0],self.whereami[1],c='black')
         ax.scatter(self.goal[0],self.goal[1],marker='x',c='black')
+
+    def vis_trace(self,X,Y):
+        fig = plt.figure(figsize=(5,5))
+        ax = plt.axes()
+        ax.plot([-1,-1,1,1,-1],[-1,1,1,-1,-1],c='black')
+        c = patches.Circle(xy=(self.center[0], self.center[1]), radius=self.radius, fc='r', ec='r')
+        ax.add_patch(c)
+        for x,y in zip(X,Y):
+            if  y[0] == 0 and y[1] == 0:
+                ax.scatter(x[0],x[1],c='black',s=5)
+            else:
+                ax.arrow(x=x[0],y=x[1],dx=y[0],dy=y[1],
+                         width=0.002,head_width=0.05,
+                         head_length=0.02,
+                         length_includes_head=True,color='k')
+        ax.scatter(self.goal[0],self.goal[1],marker='x',c='black')
+
+
+    def vis_reward(self):
+        fig, ax = plt.subplots(1, 2, figsize=(13, 5))
+        # colormap
+        rew = [self.reward_f([i/100-1,j/100-1]) for i in range(200) for j in range(200)]
+        x = np.array([[i/100-1,j/100-1] for i in range(200) for j in range(200)])
+        c = patches.Circle(xy=(self.center[0], self.center[1]), radius=self.radius, fc='r', ec='r')
+        ax[1].add_patch(c)
+        ax[1].plot([-1,-1,1,1,-1],[-1,1,1,-1,-1],c='black')
+        ax[1].plot([-1,1],[-1,1], ':',c='black',lw=1,alpha=0.7)
+        im = ax[1].scatter(x[:,0],x[:,1],c=rew)
+        ax[1].scatter(self.goal[0],self.goal[1],marker='x',c='black')
+        fig.colorbar(im)
+        # Cross section
+        rews = [self.reward_f([i/100-1,i/100-1]) for i in range(200)]
+        ax[0].plot([j/100-1 for j in range(200)],rews)
+        ax[0].set_xlabel('x=y=')
+        ax[0].set_ylabel('reward')
+        # ax[0].vlines([self.goal[0]], min(rews), max(rews), "black", linestyles='dashed')
+        ax[0].scatter(self.goal[0],max(rews),marker='x',c='black')
+
+
 
     def vis_trace(self,X,Y):
         fig = plt.figure(figsize=(5,5))
