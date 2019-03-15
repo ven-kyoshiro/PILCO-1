@@ -8,6 +8,7 @@ class JapanMaze(object):
         np.random.seed(seed=seed)
         self.action_limit = 0.1
         self.ini_posi = np.array([-0.9,-0.9])
+        self.ini_cov = np.array([[0.005,0.],[0.,0.005]])
         self.whereami = copy.deepcopy(self.ini_posi)
         self.goal = np.array([0.9,0.9])
         self.reward_f = lambda y:np.exp(-(np.linalg.norm(y-self.goal)**2)/2) 
@@ -21,7 +22,7 @@ class JapanMaze(object):
 
     def reset(self):
         self.timestep = 0
-        self.whereami = copy.deepcopy(self.ini_posi)+np.random.normal(0.0, 0.005, 2)
+        self.whereami = np.random.multivariate_normal(self.ini_posi, self.ini_cov)
         return self.whereami
     
     def isvalid(self,wai):
@@ -79,6 +80,57 @@ class JapanMaze(object):
         ax.scatter(self.goal[0],self.goal[1],marker='x',c='black')
 
 
+    def vis_gpr(self,pilco,save_name=False):
+        posi = [[-0.7,-0.7],[0.7,-0.7],[-0.7,0.7],[0.7,0.7]]
+        th = lambda t:[np.cos(t)*0.1,np.sin(t)*0.1]
+        vec = [th(np.pi/2),th(np.pi/2 + 2/3*np.pi),th(np.pi/2 + 4/3*np.pi)]
+        posi_vec = np.array([p+v for p in posi for v in vec])
+        xmean,xvar = pilco.mgpr.models[0].predict_y(posi_vec)
+        ymean,yvar = pilco.mgpr.models[1].predict_y(posi_vec)
+        means = np.hstack((xmean,ymean))
+        std = np.sqrt(np.hstack((xvar,yvar)))
+        # get ready lets draw!
+        fig = plt.figure(figsize=(10,10))
+        ax = plt.axes()
+        ax.plot([-1,-1,1,1,-1],[-1,1,1,-1,-1],c='black')
+        c = patches.Circle(xy=(self.center[0], self.center[1]), radius=self.radius, fc='r', ec='r')
+        ax.add_patch(c)
+        for i in range(len(ymean)):
+            ax.arrow(x=posi_vec[i][0],y=posi_vec[i][1],dx=posi_vec[i][2],dy=posi_vec[i][3],
+                 width=0.001,head_width=0.01,
+                 head_length=0.01,
+                 length_includes_head=True,color='k')
+            errorx = means[i][0]+posi_vec[i][:2][0]-(posi_vec[i][0]+posi_vec[i][2])
+            errory = means[i][1]+posi_vec[i][:2][1]-(posi_vec[i][1]+posi_vec[i][3])
+            ax.arrow(x=posi_vec[i][0]+posi_vec[i][2],y=posi_vec[i][1]+posi_vec[i][3],
+                     dx=errorx,dy=errory,width=0.001,head_width=0.01,head_length=0.01,
+                     length_includes_head=True,color='red')
+            e2 = patches.Ellipse(xy = means[i]+posi_vec[i][:2], width = std[i][0], height = std[i][1], 
+                 alpha = 1.0, ec = "red", fill=False)
+            ax.add_patch(e2)
+        if save_name:
+            plt.savefig(save_name,format = 'png', dpi=200)
+
+
+    def vis_policy(self,pilco,save_name=False):
+        pol = lambda x:pilco.compute_action(x[None, :])[0, :]
+        centers = [np.array([i/10-1,j/10-1]) for i in range(0,21) for j in range(0,21)]
+        vecs = [pol(c) for c in centers]
+
+        fig = plt.figure(figsize=(10,10))
+        ax = plt.axes()
+        ax.plot([-1,-1,1,1,-1],[-1,1,1,-1,-1],c='black')
+        c = patches.Circle(xy=(self.center[0], self.center[1]), radius=self.radius, fc='r', ec='r')
+        ax.add_patch(c)
+        for cent,v in zip(centers,vecs):
+            ax.arrow(x=cent[0],y=cent[1],dx=v[0],dy=v[1],
+                 width=0.002,head_width=0.03,
+                 head_length=0.02,
+                 length_includes_head=False,color='k')
+        ax.scatter(self.goal[0],self.goal[1],marker='x',c='black')
+        if save_name:
+            plt.savefig(save_name,format = 'png', dpi=200)
+        
     def vis_reward(self):
         fig, ax = plt.subplots(1, 2, figsize=(13, 5))
         # colormap
