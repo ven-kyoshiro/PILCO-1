@@ -63,6 +63,10 @@ class JapanMaze(object):
         ax.scatter(self.whereami[0],self.whereami[1],c='black')
         ax.scatter(self.goal[0],self.goal[1],marker='x',c='black')
 
+    def calc_sum_rews(self,X):
+        return sum([self.reward_f(x[:2]) for x in X])
+
+
     def vis_trace(self,X,Y,save_name=False):
         fig = plt.figure(figsize=(5,5))
         ax = plt.axes()
