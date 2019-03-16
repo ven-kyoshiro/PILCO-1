@@ -73,7 +73,7 @@ class PILCO(gpflow.models.Model):
         print('---Noises---')
         print(pd.DataFrame(data=noises))
 
-    def optimize_policy(self, maxiter=50, restarts=1):
+    def optimize_policy(self, maxiter=50, restarts=1,return_rews=False):
         '''
         Optimize controller's parameter's
         '''
@@ -105,6 +105,8 @@ class PILCO(gpflow.models.Model):
         self.assign(best_parameters)
 
         end = time.time()
+        if return_rews:
+            return best_reward[0][0]
 
     @gpflow.autoflow((float_type,[None, None]))
     def compute_action(self, x_m):
