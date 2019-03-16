@@ -105,7 +105,7 @@ try:
                     pilco.optimize_models(restarts=1)
                     break
                 except:
-                     notice('model error trial:'+str(i)+'in roll:'+str(r))
+                     notify('model error trial:'+str(i)+'in roll:'+str(r))
                 if i==39:
                     raise
             for i in range(40):
@@ -113,7 +113,7 @@ try:
                     pred_rew = pilco.optimize_policy(restarts=1,return_rews=True)
                     break
                 except:
-                     notice('policy  error trial:'+str(i)+'in roll:'+str(r))
+                     notify('policy  error trial:'+str(i)+'in roll:'+str(r))
                 if i==39:
                     raise
 
