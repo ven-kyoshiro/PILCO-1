@@ -66,25 +66,6 @@ class JapanMaze(object):
     def calc_sum_rews(self,X):
         return sum([self.reward_f(x[:2]) for x in X])
 
-
-    def vis_trace(self,X,Y,save_name=False):
-        fig = plt.figure(figsize=(5,5))
-        ax = plt.axes()
-        ax.plot([-1,-1,1,1,-1],[-1,1,1,-1,-1],c='black')
-        c = patches.Circle(xy=(self.center[0], self.center[1]), radius=self.radius, fc='r', ec='r')
-        ax.add_patch(c)
-        for x,y in zip(X,Y):
-            if  y[0] == 0 and y[1] == 0:
-                ax.scatter(x[0],x[1],c='black',s=5)
-            else:
-                ax.arrow(x=x[0],y=x[1],dx=y[0],dy=y[1],
-                         width=0.002,head_width=0.05,
-                         head_length=0.02,
-                         length_includes_head=True,color='k')
-        ax.scatter(self.goal[0],self.goal[1],marker='x',c='black')
-        if save_name:
-            plt.savefig(save_name,format = 'png', dpi=200)
-
     def vis_gpr(self,pilco,save_name=False):
         posi = [[-0.7,-0.7],[0.7,-0.7],[-0.7,0.7],[0.7,0.7]]
         th = lambda t:[np.cos(t)*0.1,np.sin(t)*0.1]
@@ -114,11 +95,16 @@ class JapanMaze(object):
                  alpha = 1.0, ec = "red", fill=False)
             ax.add_patch(e2)
         if save_name:
+            plt.title(save_name)
             plt.savefig(save_name,format = 'png', dpi=200)
+            plt.close()
 
-
-    def vis_policy(self,pilco,save_name=False):
-        pol = lambda x:pilco.compute_action(x[None, :])[0, :]
+    def vis_policy(self,pilco,save_name=False,ppo=False):
+        if ppo:
+            import torch
+            pol = lambda x: pilco.deterministic_ac_real(torch.tensor(x, dtype=torch.float))[1].detach().numpy() [0]
+        else:
+            pol = lambda x:pilco.compute_action(x[None, :])[0, :]
         centers = [np.array([i/10-1,j/10-1]) for i in range(0,21) for j in range(0,21)]
         vecs = [pol(c) for c in centers]
         fig = plt.figure(figsize=(10,10))
@@ -133,8 +119,10 @@ class JapanMaze(object):
                  length_includes_head=False,color='k')
         ax.scatter(self.goal[0],self.goal[1],marker='x',c='black')
         if save_name:
+            plt.title(save_name)
             plt.savefig(save_name,format = 'png', dpi=200)
-        
+            plt.close()
+
     def vis_reward(self):
         fig, ax = plt.subplots(1, 2, figsize=(13, 5))
         # colormap
@@ -256,7 +244,7 @@ class JapanMaze(object):
         ax.set_zlim(-0.01,1.01)
         plt.show()
 
-    def vis_trace(self,X,Y):
+    def vis_trace(self,X,Y,save_name=False):
         fig = plt.figure(figsize=(5,5))
         ax = plt.axes()
         ax.plot([-1,-1,1,1,-1],[-1,1,1,-1,-1],c='black')
@@ -271,8 +259,12 @@ class JapanMaze(object):
                          head_length=0.02,
                          length_includes_head=True,color='k')
         ax.scatter(self.goal[0],self.goal[1],marker='x',c='black')
+        if save_name:
+            plt.title(save_name)
+            plt.savefig(save_name,format = 'png', dpi=200)
+            plt.close()
 
-    def vis_scatter(self,X):
+    def vis_scatter(self,X,save_name=False):
         fig = plt.figure(figsize=(5,5))
         ax = plt.axes()
         ax.plot([-1,-1,1,1,-1],[-1,1,1,-1,-1],c='black')
@@ -280,3 +272,9 @@ class JapanMaze(object):
         ax.add_patch(c)
         ax.scatter(X[:,0],X[:,1],c='black',s=1,alpha=0.5)
         ax.scatter(self.goal[0],self.goal[1],marker='x',c='black')
+        if save_name:
+            plt.title(save_name)
+            plt.savefig(save_name,format = 'png', dpi=200)
+            plt.close()
+
+
