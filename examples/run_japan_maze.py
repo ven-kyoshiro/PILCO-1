@@ -1,5 +1,5 @@
 import numpy as np
-from pilco.models import PILCO
+from pilco.models import PILCO 
 from pilco.envs import JapanMaze 
 from pilco.controllers import RbfController, LinearController
 from pilco.rewards import ExponentialReward
@@ -11,19 +11,9 @@ import pickle
 import matplotlib.pyplot as plt
 
 
-np.random.seed(42)
-expname='test0'
+np.random.seed(45)
+expname='test5'
 
-#############TODO: dont to push #################
-import requests
-import traceback
-def notify(message = 'done'):
-    line_notify_token = 'UhzRLKWEpku0nNCv0x1XqDEDRIOpLSqNun9AgGJOXS7'
-    line_notify_api = 'https://notify-api.line.me/api/notify'
-    payload = {'message': message}
-    headers = {'Authorization': 'Bearer ' + line_notify_token}
-    line_notify = requests.post(line_notify_api, data=payload, headers=headers)
-################################################
 
 if not os.path.exists(expname):
     os.mkdir(expname)
@@ -88,7 +78,7 @@ try:
                       S_init = env.ini_cov)
         rew_record = []
         pred_record = []
-        for r in range(30):
+        for r in range(40):
             itrname = str(r)
             # visualizations
             env.vis_trace(X,Y,save_name=expname + '/' + 'collected_trajectry_after_itr:'+itrname+'.png')
@@ -100,21 +90,22 @@ try:
                 vis_rews(rew_record,pred_record,expname)
                 env.vis_trace(X_new,Y_new,save_name=expname + '/' + 'collected_trajectry_in_itr:'+itrname+'.png')
             # error handling
-            for i in range(40):
+            for i in range(100):
                 try:
                     pilco.optimize_models(restarts=1)
                     break
-                except:
-                     notify('model error trial:'+str(i)+'in roll:'+str(r))
-                if i==39:
+                except Exception as e:
+                     print('model error trial:'+str(i)+'in roll:'+str(r))
+                if i==99:
+                    print(str(traceback.format_exc())+'\n')
                     raise
-            for i in range(40):
+            for i in range(100):
                 try:
                     pred_rew = pilco.optimize_policy(restarts=1,return_rews=True)
                     break
                 except:
-                     notify('policy  error trial:'+str(i)+'in roll:'+str(r))
-                if i==39:
+                    print('policy  error trial:'+str(i)+'in roll:'+str(r))
+                if i==99:
                     raise
 
             X_new, Y_new = rollout(env,policy=pilco_policy, timesteps=40)
@@ -134,6 +125,6 @@ try:
 except Exception as e:
     print(e)
     print(traceback.format_exc())
-    notify('!!!! Error !!!!\n'+str(e)+'\n')
-    notify(str(traceback.format_exc())+'\n')
+    print('!!!! Error !!!!\n'+str(e)+'\n')
+    print(str(traceback.format_exc())+'\n')
 
